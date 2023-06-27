@@ -160,8 +160,7 @@ def parse_test_data(html_data):
     test_table_div_data = re.findall(
         r'<div class="zsml-result">.*?</div>', html_data, re.S
     )[0]
-    table_data = re.findall(r"<table.*?>.*?</table>", test_table_div_data, re.S)[0]
-    tr_list = re.findall(r"<tr>.*?</tr>", table_data, re.S)
+    tr_list = re.findall(r"<tr>.*?</tr>", test_table_div_data, re.S)
     head_data = tr_list[0]
     head_item_list = re.findall(r"<th.*?>(.*?)</th>", head_data, re.S)
     test_data_list = tr_list[1:]
@@ -225,12 +224,12 @@ def get_ss_school_data(ssmc, ssdm, mldm, yjxkdm, mlmc):
             ssdm, school_name, mldm, yjxkdm, "", xxfs_全日制
         )
         parsed_school_detail = parse_school_detail(school_detail_data)
-        for i in range(0, len(parsed_school_detail)):
-            school_detail = parsed_school_detail[i]
+        for j in range(0, len(parsed_school_detail)):
+            school_detail = parsed_school_detail[j]
             school_test_data = query_test_data(school_detail["考试范围"])
             parsed_school_test_data = parse_test_data(school_test_data)
-            parsed_school_detail[i]["考试范围"] = parsed_school_test_data
-            print(f'{ssmc} - {school_name} - {mlmc} - {parsed_school_detail[i]["研究方向"]} parsed')
+            parsed_school_detail[j]["考试范围"] = parsed_school_test_data
+            print(f'{ssmc} - {school_name} - {mlmc} - {parsed_school_detail[j]["研究方向"]} parsed')
             time.sleep(0.3)
         parsed_school_data[i]["专业目录"] = parsed_school_detail
     return parsed_school_data
@@ -243,6 +242,7 @@ def main():
         _省市名称 = ss["mc"]
         _省市代码 = ss["dm"]
         cs_school_data = get_ss_school_data(_省市名称, _省市代码, mldm_工学, yjxkdm_计算机科学与技术, "计算机科学与技术")
+        final_result[_省市名称] = {}
         final_result[_省市名称]["计算机科学与技术"] = cs_school_data
         se_school_data = get_ss_school_data(_省市名称, _省市代码, mldm_工学, yjxkdm_软件工程, "软件工程")
         final_result[_省市名称]["软件工程"] = se_school_data
