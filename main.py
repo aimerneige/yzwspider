@@ -230,8 +230,8 @@ def get_ss_school_data(ssmc, ssdm, mldm, yjxkdm, mlmc):
             school_test_data = query_test_data(school_detail["考试范围"])
             parsed_school_test_data = parse_test_data(school_test_data)
             parsed_school_detail[i]["考试范围"] = parsed_school_test_data
-            print(f'{ssmc} - {mlmc} - {parsed_school_detail[i]["研究方向"]} parsed')
-            time.sleep(300)
+            print(f'{ssmc} - {school_name} - {mlmc} - {parsed_school_detail[i]["研究方向"]} parsed')
+            time.sleep(0.3)
         parsed_school_data[i]["专业目录"] = parsed_school_detail
     return parsed_school_data
 
@@ -246,7 +246,6 @@ def main():
         final_result[_省市名称]["计算机科学与技术"] = cs_school_data
         se_school_data = get_ss_school_data(_省市名称, _省市代码, mldm_工学, yjxkdm_软件工程, "软件工程")
         final_result[_省市名称]["软件工程"] = se_school_data
-        print(f"{_省市名称} parsed")
     write_to_file(json.dumps(final_result, ensure_ascii=False), "./final_result.json")
 
 
