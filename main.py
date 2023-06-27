@@ -1,14 +1,14 @@
 # -*- coding: utf8 -*-
 import re
 import json
+import time
 import requests
 
 root_url = "https://yz.chsi.com.cn/"
 
-sc_data = []
-
 mldm_工学 = "08"
 yjxkdm_计算机科学与技术 = "0812"
+yjxkdm_软件工程 = "0835"
 
 xxfs_全日制 = "1"
 xxfs_非全日制 = "2"
@@ -157,8 +157,10 @@ def query_test_data(test_url):
 
 
 def parse_test_data(html_data):
-    test_table_div_data = re.findall(r'<div class="zsml-result">.*?</div>', html_data, re.S)[0]
-    table_data = re.findall(r'<table.*?>.*?</table>', test_table_div_data, re.S)[0]
+    test_table_div_data = re.findall(
+        r'<div class="zsml-result">.*?</div>', html_data, re.S
+    )[0]
+    table_data = re.findall(r"<table.*?>.*?</table>", test_table_div_data, re.S)[0]
     tr_list = re.findall(r"<tr>.*?</tr>", table_data, re.S)
     head_data = tr_list[0]
     head_item_list = re.findall(r"<th.*?>(.*?)</th>", head_data, re.S)
@@ -170,14 +172,22 @@ def parse_test_data(html_data):
         test_外语_data = test_item_list[1]
         test_业务课一_data = test_item_list[2]
         test_业务课二_data = test_item_list[3]
-        test_政治 = "".join(test_政治_data.split('<')[0].split())
-        test_政治_备注 = re.findall(r'<span class="sub-msg">(.*?)</span>', test_政治_data, re.S)[0]
-        test_外语 = "".join(test_外语_data.split('<')[0].split())
-        test_外语_备注 = re.findall(r'<span class="sub-msg">(.*?)</span>', test_外语_data, re.S)[0]
-        test_业务课一 = "".join(test_业务课一_data.split('<')[0].split())
-        test_业务课一_备注 = re.findall(r'<span class="sub-msg">(.*?)</span>', test_业务课一_data, re.S)[0]
-        test_业务课二 = "".join(test_业务课二_data.split('<')[0].split())
-        test_业务课二_备注 = re.findall(r'<span class="sub-msg">(.*?)</span>', test_业务课二_data, re.S)[0]
+        test_政治 = "".join(test_政治_data.split("<")[0].split())
+        test_政治_备注 = re.findall(
+            r'<span class="sub-msg">(.*?)</span>', test_政治_data, re.S
+        )[0]
+        test_外语 = "".join(test_外语_data.split("<")[0].split())
+        test_外语_备注 = re.findall(
+            r'<span class="sub-msg">(.*?)</span>', test_外语_data, re.S
+        )[0]
+        test_业务课一 = "".join(test_业务课一_data.split("<")[0].split())
+        test_业务课一_备注 = re.findall(
+            r'<span class="sub-msg">(.*?)</span>', test_业务课一_data, re.S
+        )[0]
+        test_业务课二 = "".join(test_业务课二_data.split("<")[0].split())
+        test_业务课二_备注 = re.findall(
+            r'<span class="sub-msg">(.*?)</span>', test_业务课二_data, re.S
+        )[0]
         _test = {
             head_item_list[0]: {
                 "考试科目": test_政治,
@@ -205,37 +215,40 @@ def write_to_file(text_data, file_name):
         f.write(text_data)
 
 
-def get_cs_school_data():
-    cs_school_data = {}
+def get_ss_school_data(ssmc, ssdm, mldm, yjxkdm, mlmc):
+    school_data = query_school_data(ssdm, "", mldm, yjxkdm, "", xxfs_全日制)
+    parsed_school_data = parse_school_data(school_data)
+    for i in range(0, len(parsed_school_data)):
+        school = parsed_school_data[i]
+        school_name = school["招生单位"].split(")")[1]
+        school_detail_data = query_school_detail(
+            ssdm, school_name, mldm, yjxkdm, "", xxfs_全日制
+        )
+        parsed_school_detail = parse_school_detail(school_detail_data)
+        for i in range(0, len(parsed_school_detail)):
+            school_detail = parsed_school_detail[i]
+            school_test_data = query_test_data(school_detail["考试范围"])
+            parsed_school_test_data = parse_test_data(school_test_data)
+            parsed_school_detail[i]["考试范围"] = parsed_school_test_data
+            print(f'{ssmc} - {mlmc} - {parsed_school_detail[i]["研究方向"]} parsed')
+            time.sleep(300)
+        parsed_school_data[i]["专业目录"] = parsed_school_detail
+    return parsed_school_data
+
+
+def main():
+    final_result = {}
     ss_data = query_ss_data()
     for ss in ss_data:
         _省市名称 = ss["mc"]
         _省市代码 = ss["dm"]
-        school_data = query_school_data(
-            _省市代码, "", mldm_工学, yjxkdm_计算机科学与技术, "", xxfs_全日制
-        )
-        parsed_school_data = parse_school_data(school_data)
-        for i in range(0, len(parsed_school_data)):
-            school = parsed_school_data[i]
-            school_name = school["招生单位"].split(")")[1]
-            school_detail_data = query_school_detail(
-                _省市代码, school_name, mldm_工学, yjxkdm_计算机科学与技术, "", xxfs_全日制
-            )
-            parsed_school_detail = parse_school_detail(school_detail_data)
-            print(f'{school_name} parsed')
-            parsed_school_data[i]["专业目录"] = parsed_school_detail
-        cs_school_data[_省市名称] = parsed_school_data
+        cs_school_data = get_ss_school_data(_省市名称, _省市代码, mldm_工学, yjxkdm_计算机科学与技术, "计算机科学与技术")
+        final_result[_省市名称]["计算机科学与技术"] = cs_school_data
+        se_school_data = get_ss_school_data(_省市名称, _省市代码, mldm_工学, yjxkdm_软件工程, "软件工程")
+        final_result[_省市名称]["软件工程"] = se_school_data
         print(f"{_省市名称} parsed")
-    write_to_file(
-        json.dumps(cs_school_data, ensure_ascii=False), "./cs_school_data.json"
-    )
+    write_to_file(json.dumps(final_result, ensure_ascii=False), "./final_result.json")
 
 
 if __name__ == "__main__":
-    # html_data = query_school_detail("14", "山西大学", "08", "0812", "", "1")
-    # parsed_result = parse_school_detail(html_data)
-    # write_to_file(json.dumps(parsed_result, ensure_ascii=False), "./school_detail.json")
-    # write_to_file(html_data, "./example.html")
-    # html_data = query_test_data("zsml/kskm.jsp?id=1010821022081200011")
-    # write_to_file(html_data, "./test_example.html")
-    get_cs_school_data()
+    main()
