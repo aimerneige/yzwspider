@@ -157,7 +157,47 @@ def query_test_data(test_url):
 
 
 def parse_test_data(html_data):
-    pass
+    test_table_div_data = re.findall(r'<div class="zsml-result">.*?</div>', html_data, re.S)[0]
+    table_data = re.findall(r'<table.*?>.*?</table>', test_table_div_data, re.S)[0]
+    tr_list = re.findall(r"<tr>.*?</tr>", table_data, re.S)
+    head_data = tr_list[0]
+    head_item_list = re.findall(r"<th.*?>(.*?)</th>", head_data, re.S)
+    test_data_list = tr_list[1:]
+    parsed_data_list = []
+    for test_data in test_data_list:
+        test_item_list = re.findall(r"<td.*?>(.*?)</td>", test_data, re.S)
+        test_政治_data = test_item_list[0]
+        test_外语_data = test_item_list[1]
+        test_业务课一_data = test_item_list[2]
+        test_业务课二_data = test_item_list[3]
+        test_政治 = "".join(test_政治_data.split('<')[0].split())
+        test_政治_备注 = re.findall(r'<span class="sub-msg">(.*?)</span>', test_政治_data, re.S)[0]
+        test_外语 = "".join(test_外语_data.split('<')[0].split())
+        test_外语_备注 = re.findall(r'<span class="sub-msg">(.*?)</span>', test_外语_data, re.S)[0]
+        test_业务课一 = "".join(test_业务课一_data.split('<')[0].split())
+        test_业务课一_备注 = re.findall(r'<span class="sub-msg">(.*?)</span>', test_业务课一_data, re.S)[0]
+        test_业务课二 = "".join(test_业务课二_data.split('<')[0].split())
+        test_业务课二_备注 = re.findall(r'<span class="sub-msg">(.*?)</span>', test_业务课二_data, re.S)[0]
+        _test = {
+            head_item_list[0]: {
+                "考试科目": test_政治,
+                "备注": test_政治_备注,
+            },
+            head_item_list[1]: {
+                "考试科目": test_外语,
+                "备注": test_外语_备注,
+            },
+            head_item_list[2]: {
+                "考试科目": test_业务课一,
+                "备注": test_业务课一_备注,
+            },
+            head_item_list[3]: {
+                "考试科目": test_业务课二,
+                "备注": test_业务课二_备注,
+            },
+        }
+        parsed_data_list.append(_test)
+    return parsed_data_list
 
 
 def write_to_file(text_data, file_name):
