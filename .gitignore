@@ -1,2 +1,3 @@
 *.json
 *.html
+!final_result.json
