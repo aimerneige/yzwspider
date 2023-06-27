@@ -174,14 +174,28 @@ def get_cs_school_data():
         school_data = query_school_data(
             _省市代码, "", mldm_工学, yjxkdm_计算机科学与技术, "", xxfs_全日制
         )
-        cs_school_data[_省市名称] = parse_school_data(school_data)
+        parsed_school_data = parse_school_data(school_data)
+        for i in range(0, len(parsed_school_data)):
+            school = parsed_school_data[i]
+            school_name = school["招生单位"].split(")")[1]
+            school_detail_data = query_school_detail(
+                _省市代码, school_name, mldm_工学, yjxkdm_计算机科学与技术, "", xxfs_全日制
+            )
+            parsed_school_detail = parse_school_detail(school_detail_data)
+            print(f'{school_name} parsed')
+            parsed_school_data[i]["专业目录"] = parsed_school_detail
+        cs_school_data[_省市名称] = parsed_school_data
         print(f"{_省市名称} parsed")
-    write_to_file(json.dumps(cs_school_data, ensure_ascii=False), "./school_data.json")
+    write_to_file(
+        json.dumps(cs_school_data, ensure_ascii=False), "./cs_school_data.json"
+    )
 
 
 if __name__ == "__main__":
     # html_data = query_school_detail("14", "山西大学", "08", "0812", "", "1")
-    # parse_school_detail(html_data)
+    # parsed_result = parse_school_detail(html_data)
+    # write_to_file(json.dumps(parsed_result, ensure_ascii=False), "./school_detail.json")
     # write_to_file(html_data, "./example.html")
-    html_data = query_test_data("zsml/kskm.jsp?id=1010821022081200011")
-    write_to_file(html_data, "./test_example.html")
+    # html_data = query_test_data("zsml/kskm.jsp?id=1010821022081200011")
+    # write_to_file(html_data, "./test_example.html")
+    get_cs_school_data()
