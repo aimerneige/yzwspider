@@ -7,14 +7,17 @@ root_url = "https://yz.chsi.com.cn/"
 
 sc_data = []
 
+mldm_工学 = "08"
+yjxkdm_计算机科学与技术 = "0812"
+
 xxfs_全日制 = "1"
 xxfs_非全日制 = "2"
 
 
-def query_sc_data():
-    sc_url = root_url + "zsml/pages/getSs.jsp"
-    sc_resp = requests.post(sc_url)
-    return json.loads(sc_resp.text)
+def query_ss_data():
+    ss_url = root_url + "zsml/pages/getSs.jsp"
+    ss_resp = requests.post(ss_url)
+    return json.loads(ss_resp.text)
 
 
 def query_ml_data():
@@ -85,6 +88,19 @@ def write_to_file(text_data, file_name):
         f.write(text_data)
 
 
+def get_cs_school_data():
+    cs_school_data = {}
+    ss_data = query_ss_data()
+    for ss in ss_data:
+        ssmc = ss["mc"]
+        ssdm = ss["dm"]
+        school_data = query_school_data(
+            ssdm, "", mldm_工学, yjxkdm_计算机科学与技术, "", xxfs_全日制
+        )
+        cs_school_data[ssmc] = parse_school_data(school_data)
+        print(f'{ssmc} parsed')
+    write_to_file(json.dumps(cs_school_data, ensure_ascii=False), "./school_data.json")
+
+
 if __name__ == "__main__":
-    html_data = query_school_data("14", "", "08", "0812", "", "1")
-    print(parse_school_data(html_data))
+    get_cs_school_data()
